@@ -1,0 +1,10 @@
+chunchun/
+chunchun-gz/
+training_data/
+*.pyc
+logs-Tacotron/
+G2P_CN_HCSI/databaker_MIX_Phoneme/
+G2P_EN_Kb/databaker_MIX_Phoneme/
+logs-Tacotron/
+*__pycache__*
+tacotron_output/

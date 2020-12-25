@@ -1,0 +1,16 @@
+LJSpeech-1.1      13100句 	    		说话人0 英语0   编号LJ开头
+DataBaker         10000句   			说话人1 汉语1   编号000001-010000
+TTS.HUawei.zhcmn.F.Deng 2199句	 	说话人2 汉语1   编号050001-055440
+TTS.Huawei.enus.F.XuYue   11132句		说话人3 英语0   编号700001-810000
+TTS.THCoSS.zhcmn.F.M 03FR00 5434句		说话人4 汉语1   编号asen0001-asen5445	
+TTS.THCoSS.zhcmn.F.M 03MR00 4442句   	说话人5 汉语1   编号bsen0001-bsen4535
+TTS.Pachira.zhcmn            10713句		说话人6 汉语1   编号010001-620398
+TTS.DataBaker.enus.M.DB1     1000句		说话人7 英语0   编号x000001-x001000	
+TTS.DataBaker.enus.F.DB1	1000句		说话人8 英语0   编号y000001-y001000	
+TTS.DataBaker.enus.F.DB2	1000句		说话人9 英语0   编号z000001-z001000
+------------------------------------------------------------------------------------
+独立用来平安实习:
+chunchun_EN  说话人0 英语0   编号chunchun_EN开头(preprocess后)
+chunchun_CN  说话人0 汉语1   编号chunchun_CN开头(preprocess后)
+
+

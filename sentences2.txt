@@ -1,0 +1,10 @@
+wo3-xi3-huan1 chi1-shu1-cai4,bu4-xi3-huan1 chi1-rou4.|0|0
+wo3-xi3-huan1 chi1-shu1-cai4,bu4-xi3-huan1 chi1-rou4.|1|1
+jian1-jia1 cang1-cang1,bai2-lu4 wei2-shuang1.|2|0
+jian1-jia1 cang1-cang1,bai2-lu4 wei2-shuang1.|2|1
+Scientists at the CERN laboratory say they have discovered a new particle.|0|0
+Scientists at the CERN laboratory say they have discovered a new particle.|0|1
+There's a way to measure the acute emotional intelligence that has never gone out of style.|3|1
+There's a way to measure the acute emotional intelligence that has never gone out of style.|4|0
+There's a way to measure the acute emotional intelligence that has never gone out of style.|5|1
+There's a way to measure the acute emotional intelligence that has never gone out of style.|6|0
