@@ -19,7 +19,7 @@ if True:
     symbols = [_pad, _eos] + _EN_Symbols + _CN_Symbols
 
     # 但是tone stress的字符并不查表, 直接字符int转换, 所以不能用len, 而是:tone_stress_symbols_max_no指定不越界
-    tone_stress_symbols = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']
+    tone_stress_symbols = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'] # 12是padding
     tone_stress_symbols_max_no = 15
 else:
     _pad        = '_'

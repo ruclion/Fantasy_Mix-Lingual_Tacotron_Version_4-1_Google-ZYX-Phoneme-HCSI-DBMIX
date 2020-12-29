@@ -135,7 +135,7 @@ hparams = tf.contrib.training.HParams(
 
 	# multi-language:
 	language_dim=3,  # add same with encoder_output / concat
-	language_num=2,
+	language_num=3, # 0 for en, 1 for cn, 2 for padding
 
 	# VAE
 	VAE_conv_num_layers=2,  # number of VAE convolutional layers

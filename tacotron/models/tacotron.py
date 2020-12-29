@@ -70,16 +70,18 @@ class Tacotron():
 			tower_input_lengths = tf.split(input_lengths, num_or_size_splits=hp.tacotron_num_gpus, axis=0)
 			tower_targets_lengths = tf.split(targets_lengths, num_or_size_splits=hp.tacotron_num_gpus, axis=0) if targets_lengths is not None else targets_lengths
 			tower_speaker_labels = tf.split(speaker_labels, num_or_size_splits=hp.tacotron_num_gpus, axis=0)
-			tower_language_labels = tf.split(language_labels, num_or_size_splits=hp.tacotron_num_gpus, axis=0)
+			# tower_language_labels = tf.split(language_labels, num_or_size_splits=hp.tacotron_num_gpus, axis=0)
 
 			p_inputs = tf.py_func(split_func, [inputs, split_infos[:, 0]], lout_int)
 			p_inputs_tone_stress = tf.py_func(split_func, [inputs_tone_stress, split_infos[:, 0]], lout_int)
+			p_language_labels = tf.py_func(split_func, [language_labels, split_infos[:, 0]], lout_int)
 			p_mel_targets = tf.py_func(split_func, [mel_targets, split_infos[:,1]], lout_float) if mel_targets is not None else mel_targets
 			p_stop_token_targets = tf.py_func(split_func, [stop_token_targets, split_infos[:,2]], lout_float) if stop_token_targets is not None else stop_token_targets
 			p_linear_targets = tf.py_func(split_func, [linear_targets, split_infos[:, 3]], lout_float) if linear_targets is not None else linear_targets
 
 			tower_inputs = []
 			tower_inputs_tone_stress = []
+			tower_language_labels = []
 			tower_mel_targets = []
 			tower_stop_token_targets = []
 			tower_linear_targets = []
@@ -91,6 +93,7 @@ class Tacotron():
 			for i in range (hp.tacotron_num_gpus):
 				tower_inputs.append(tf.reshape(p_inputs[i], [batch_size, -1]))
 				tower_inputs_tone_stress.append(tf.reshape(p_inputs_tone_stress[i], [batch_size, -1]))
+				tower_language_labels.append(tf.reshape(p_language_labels[i], [batch_size, -1]))
 				if p_mel_targets is not None:
 					tower_mel_targets.append(tf.reshape(p_mel_targets[i], [batch_size, -1, mel_channels]))
 				if p_stop_token_targets is not None:
@@ -147,6 +150,8 @@ class Tacotron():
 					self.speaker_embedding_table = tf.get_variable(
 						'speaker_embedding', [hp.speaker_num, hp.speaker_dim], dtype=tf.float32)
 					embedded_speaker_label = tf.nn.embedding_lookup(self.speaker_embedding_table, tower_speaker_labels[i])
+					
+					
 					self.language_embedding_table = tf.get_variable(
 						'language_embedding', [hp.language_num, hp.language_dim], dtype=tf.float32)
 					embedded_language_label = tf.nn.embedding_lookup(self.language_embedding_table, tower_language_labels[i])
@@ -162,10 +167,25 @@ class Tacotron():
 					#For shape visualization purpose
 					enc_conv_output_shape = encoder_cell.conv_output_shape
 
+
+
+					#language concat
+					# input_seq_len = tf.shape(encoder_outputs)[1]
+					# _embedded_language_label = tf.expand_dims(embedded_language_label, axis=1)
+					# _embedded_language_label = tf.tile(_embedded_language_label, multiples=[1, input_seq_len, 1])
+					self.input_seq_len = tf.shape(encoder_outputs)[1]
+					self.language_len = tf.shape(embedded_language_label)[1]
+					self.language_id_print = tower_language_labels[i]
+					self.tone_stress_print = tower_inputs_tone_stress[i]
+
+					LID_encoder_outputs = tf.concat([encoder_outputs, embedded_language_label], axis=-1)
+
+
+
 					# Adversarial Speaker-Classifiers,	input:encoder_output,output:predicted speaker_label
 					speaker_classify = Speaker_Classifier(is_training, layer_size=hp.softmax_hidden_layer,
 														  speaker_size=hp.speaker_num)
-					predict_speaker_labels = speaker_classify(encoder_outputs, hp.grad_rev_scale)
+					predict_speaker_labels = speaker_classify(LID_encoder_outputs, hp.grad_rev_scale)
 
 					# Variational AutoEncoder
 					if is_training:
@@ -185,7 +205,7 @@ class Tacotron():
 					#Attention Decoder Prenet
 					prenet = Prenet(is_training, layers_sizes=hp.prenet_layers, drop_rate=hp.tacotron_dropout_rate, scope='decoder_prenet')
 					#Attention Mechanism
-					attention_mechanism = LocationSensitiveAttention(hp.attention_dim, encoder_outputs, hparams=hp,
+					attention_mechanism = LocationSensitiveAttention(hp.attention_dim, LID_encoder_outputs, hparams=hp,
 						mask_encoder=hp.mask_encoder, memory_sequence_length=tf.reshape(tower_input_lengths[i], [-1]), smoothing=hp.smoothing,
 						cumulate_weights=hp.cumulative_weights)
 					#Decoder LSTM Cells
@@ -202,7 +222,7 @@ class Tacotron():
 						attention_mechanism,
 						decoder_lstm,
 						embedded_speaker_label,
-						embedded_language_label,
+						# embedded_language_label,
 						residual_encoding,
 						frame_projection,
 						stop_projection)
@@ -277,7 +297,7 @@ class Tacotron():
 					tower_embedded_inputs_tone_stress.append(embedded_inputs_tone_stress)
 					tower_embedded_inputs_concat.append(embedded_inputs_concat)
 					tower_enc_conv_output_shape.append(enc_conv_output_shape)
-					tower_encoder_outputs.append(encoder_outputs)
+					tower_encoder_outputs.append(LID_encoder_outputs)
 					tower_residual.append(residual)
 					tower_projected_residual.append(projected_residual)
 

@@ -213,6 +213,11 @@ def train(log_dir, args, hparams):
 			while not coord.should_stop() and step < args.tacotron_train_steps:
 				start_time = time.time()
 				step, loss, opt, D_mean, D_var = sess.run([global_step, model.loss, model.optimize, model.D_mean, model.D_var])
+				# a, b, c, d, step, loss, opt, D_mean, D_var = sess.run([model.input_seq_len, model.language_len, model.language_id_print, model.tone_stress_print, global_step, model.loss, model.optimize, model.D_mean, model.D_var])
+				# print(a, b)
+				# assert a == b
+				# print('language id:', c)
+				# print('tone:', d)
 				# inputs_printout, inputs_tone_stress_printout, step, loss, opt, D_mean, D_var = sess.run([model.inputs_printout, model.inputs_tone_stress_printout, global_step, model.loss, model.optimize, model.D_mean, model.D_var])
 				# print('\n\n\n\n\n')
 				# print(inputs_printout)

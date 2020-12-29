@@ -75,6 +75,7 @@ def text_to_sequence_MIX_Phoneme_Version(text, cleaner_names):
 
   # Append EOS token
   sequence_txt.append(_symbol_to_id['~'])
+  assert digital_tone_stress[-1] == 11 or digital_tone_stress[-1] == 10
   digital_tone_stress.append(digital_tone_stress[-1])
 
   assert len(sequence_txt) == len(digital_tone_stress)

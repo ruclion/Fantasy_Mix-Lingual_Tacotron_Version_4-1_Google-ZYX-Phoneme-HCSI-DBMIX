@@ -58,7 +58,9 @@ class Feeder:
 			assert hparams.tacotron_test_batches == self.test_steps
 
 		#pad input sequences with the <pad_token> 0 ( _ )
-		self._pad = 0
+		self._pad = int(0)
+		self.tone_stress_pad = int(12)
+		self.language_pad = int(2)
 		# tone_stress的填补是最后一个字符
 
 		#explicitely setting the padding to a value that doesn't originally exist in the spectogram
@@ -77,7 +79,7 @@ class Feeder:
 			tf.placeholder(tf.int32, shape=(None, None), name='inputs'),
 			tf.placeholder(tf.int32, shape=(None, None), name='inputs_tone_stress'),
 			tf.placeholder(tf.int32, shape=(None, ), name='speaker_labels'),
-			tf.placeholder(tf.int32, shape=(None, ), name='language_labels'),
+			tf.placeholder(tf.int32, shape=(None, None), name='language_labels'),
 			tf.placeholder(tf.int32, shape=(None, ), name='input_lengths'),
 			tf.placeholder(tf.float32, shape=(None, None, hparams.num_mels), name='mel_targets'),
 			tf.placeholder(tf.float32, shape=(None, None), name='token_targets'),
@@ -144,7 +146,9 @@ class Feeder:
 		linear_target = np.load(os.path.join(self._linear_dir, meta[2]))
 
 		speaker_label = np.asarray(int(meta[6]), dtype=np.int32)
-		language_label = np.asarray(int(meta[7]), dtype=np.int32)
+		# language_label = np.asarray(int(meta[7]), dtype=np.int32)
+		language_label = np.full((input_data[0].shape[0],), fill_value = int(meta[7]), dtype=np.int32)
+
 		return (input_data[0], input_data[1], speaker_label, language_label, mel_target, token_target, linear_target, len(mel_target))
 
 	def make_test_batches(self):
@@ -208,7 +212,9 @@ class Feeder:
 		linear_target = np.load(os.path.join(self._linear_dir, meta[2]))
 
 		speaker_label = np.asarray(int(meta[6]), dtype=np.int32)
-		language_label = np.asarray(int(meta[7]), dtype=np.int32)
+		# language_label = np.asarray(int(meta[7]), dtype=np.int32)
+		language_label = np.full((input_data[0].shape[0],), fill_value = int(meta[7]), dtype=np.int32)
+
 		return (input_data[0], input_data[1], speaker_label, language_label, mel_target, token_target, linear_target, len(mel_target))
 
 	def _prepare_batch(self, batches, outputs_per_step):
@@ -243,8 +249,12 @@ class Feeder:
 
 			speaker_label_cur_device = np.asarray([x[2] for x in batch], dtype=np.int32)
 			speaker_labels = np.concatenate((speaker_labels, speaker_label_cur_device),axis=0) if speaker_labels is not None else speaker_label_cur_device
-			language_label_cur_device = np.asarray([x[3] for x in batch], dtype=np.int32)
+
+
+			language_label_cur_device, language_label_max_len = self._prepare_inputs_language([x[3] for x in batch])
 			language_labels = np.concatenate((language_labels, language_label_cur_device),axis=0) if language_labels is not None else language_label_cur_device
+			assert language_label_max_len == input_max_len
+			
 			mel_target_cur_device, mel_target_max_len = self._prepare_targets([x[4] for x in batch], outputs_per_step)
 			mel_targets = np.concatenate(( mel_targets, mel_target_cur_device), axis=1) if mel_targets is not None else mel_target_cur_device
 
@@ -263,8 +273,11 @@ class Feeder:
 
 	def _prepare_inputs_tone_stress(self, inputs_tone_stress):
 		max_len = max([len(x) for x in inputs_tone_stress])
-		pad_val = inputs_tone_stress[0][-1]
-		return np.stack([self._pad_input_tone_stress(x, max_len, pad_val) for x in inputs_tone_stress]), max_len
+		return np.stack([self._pad_input_tone_stress(x, max_len) for x in inputs_tone_stress]), max_len
+
+	def _prepare_inputs_language(self, inputs_language):
+		max_len = max([len(x) for x in inputs_language])
+		return np.stack([self._pad_input_language(x, max_len) for x in inputs_language]), max_len
 
 	def _prepare_targets(self, targets, alignment):
 		max_len = max([len(t) for t in targets])
@@ -279,8 +292,11 @@ class Feeder:
 	def _pad_input(self, x, length):
 		return np.pad(x, (0, length - x.shape[0]), mode='constant', constant_values=self._pad)
 
-	def _pad_input_tone_stress(self, x, length, value):
-		return np.pad(x, (0, length - x.shape[0]), mode='constant', constant_values=value)
+	def _pad_input_tone_stress(self, x, length):
+		return np.pad(x, (0, length - x.shape[0]), mode='constant', constant_values=self.tone_stress_pad)
+
+	def _pad_input_language(self, x, length):
+		return np.pad(x, (0, length - x.shape[0]), mode='constant', constant_values=self.language_pad)
 
 	def _pad_target(self, t, length):
 		return np.pad(t, [(0, length - t.shape[0]), (0, 0)], mode='constant', constant_values=self._target_pad)
